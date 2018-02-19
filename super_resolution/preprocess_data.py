@@ -64,7 +64,7 @@ class DataProcessor(object):
             print(fileName)
             data_image = cv2.imread(fileName)
             data_image = cv2.cvtColor(data_image, cv2.COLOR_BGR2YCR_CB)
-            data_image = data_image / 255  # Divide all values by the largest possible value in the datatype
+            data_image = data_image / 255
             data.append(data_image)
 
 
@@ -74,12 +74,8 @@ class DataProcessor(object):
             print(referFilePath)
             referImage = cv2.imread(referFilePath)
             referImage = cv2.cvtColor(referImage, cv2.COLOR_BGR2YCR_CB)
-            # referImage = referImage / 255
-            cv2.imshow('test', referImage)
-            cv2.waitKey(0)
+            referImage = referImage / 255
             referImage = cv2.cvtColor(referImage, cv2.COLOR_YCrCb2BGR)
-            cv2.imshow('test', referImage)
-            cv2.waitKey(0)
             print(referImage)
             labels.append(referImage)
 
