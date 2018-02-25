@@ -55,43 +55,25 @@ class DataProcessor(object):
             newFilePath = os.path.join(destFolder, fileName)
             cv2.imwrite(newFilePath, output)
 
-    def saveToH5File(self, dataFolder, labelsFolder, savePath):
+    def saveToH5File(self, dataFolder, patchNum, savePath):
         data = []
-        labels = []
 
         fileNames = utils.eachFile(dataFolder)
         for fileName in fileNames:
-            print(fileName)
             data_image = cv2.imread(fileName)
-            data_image = cv2.cvtColor(data_image, cv2.COLOR_BGR2YCR_CB)
-            data_image = data_image / 255
-            data.append(data_image)
+            # every image sample patchNum patch
+            width, height, channel = data_image.shape
+            for i in range(patchNum):
+                m = int(np.random.rand() * (width-80))
+                n = int(np.random.rand() * (height-80))
+                patch = data_image[m:m+80, n:n+80]
+                data.append(patch)
 
-
-            referFileName = re.findall(dataFolder + '/(.*)', fileName)[0]
-            referFilePath = os.path.join(labelsFolder, referFileName)
-
-            print(referFilePath)
-            referImage = cv2.imread(referFilePath)
-            referImage = cv2.cvtColor(referImage, cv2.COLOR_BGR2YCR_CB)
-            referImage = referImage / 255
-            referImage = cv2.cvtColor(referImage, cv2.COLOR_YCrCb2BGR)
-            print(referImage)
-            labels.append(referImage)
-
-        total = len(data)
-        print(total)
-
-        train_data = np.array(data[:int(total*4/5)])
-        train_labels = np.array(labels[:int(total*4/5)])
-        test_data = np.array(data[int(total*4/5):])
-        test_labels = np.array(labels[int(total*4/5):])
+        data = np.array(data)
+        print('total patch:', len(data))
 
         with h5py.File(savePath, 'w') as file:
-            file.create_dataset('train_data', data=train_data)
-            file.create_dataset('train_labels', data=train_labels)
-            file.create_dataset('test_data', data=test_data)
-            file.create_dataset('test_labels', data=test_labels)
+            file.create_dataset('train_data', data=data)
             print('DataSet saved.')
 
 
@@ -101,6 +83,10 @@ class DataProcessor(object):
         fileNames = utils.eachFile(srcFolder)
         for fileName in fileNames:
             image = cv2.imread(fileName)
+
+            if(image is None):
+                utils.deleteFile(fileName)
+                continue
 
             width, height, channel = image.shape
             if(width > 400 and height > 400):
@@ -118,9 +104,8 @@ class DataProcessor(object):
 
 if __name__ == '__main__':
     # utils.deleteGif('./images/origin')
-
     dataProcessor = DataProcessor()
     # dataProcessor.cut_images('./images/origin', './images/cut')
-    # dataProcessor.reduce_size('./images/cut', './images/lowResolution', 1/4)
-    # dataProcessor.restore_size('./images/lowResolution', './images/interpolation','./images/cut')
-    dataProcessor.saveToH5File('./images/interpolation', './images/cut', './dataset.h5')
+    dataProcessor.reduce_size('./images/cut', './images/lowResolution', 1/5)
+    dataProcessor.restore_size('./images/lowResolution', './images/interpolation','./images/cut')
+    # dataProcessor.saveToH5File('./images/cut', 50, './dataset.h5')
